@@ -24,7 +24,13 @@ if __name__ == '__main__':
 
 
 def parse_cookie(query: str) -> dict:
-    return {}
+    reformat = query.replace('/', '?').replace(':', '?').replace(';', '?').replace('&', '?').split('?')
+    parsed_cookie = {
+        second[0]: second[1] for second in [first.split('=', 1) for first in reformat if '=' in first]
+        if (len(second[0]) > 1 and '=' not in second[:][0][0])
+           and (len(second[1]) > 1 and '=' not in second[:][1][0])
+    }
+    return parsed_cookie
 
 
 if __name__ == '__main__':
@@ -32,3 +38,13 @@ if __name__ == '__main__':
     assert parse_cookie('') == {}
     assert parse_cookie('name=Dima;age=28;') == {'name': 'Dima', 'age': '28'}
     assert parse_cookie('name=Dima=User;age=28;') == {'name': 'Dima=User', 'age': '28'}
+    assert parse_cookie('name=Dima//age==28;') == {'name': 'Dima'}
+    assert parse_cookie('name==Dima//age==28;') == {}
+    assert parse_cookie('name=/Dima;age=28;') == {'age': '28'}
+    assert parse_cookie('name===Dima/User;age=28;') == {'age': '28'}
+    assert parse_cookie('name/Dima:User;age?28;') == {}
+    assert parse_cookie('name=Dima=User;age=28=Dima;') == {'name': 'Dima=User', 'age': '28=Dima'}
+    assert parse_cookie('name=Dima=User=Dima;age//28;') == {'name': 'Dima=User=Dima'}
+    assert parse_cookie('name/Dima=User=Dima;age?28;') == {'Dima': 'User=Dima'}
+    assert parse_cookie('name/Dima=User=Dima=age=28;') == {'Dima': 'User=Dima=age=28'}
+    assert parse_cookie('name/Dima=User&/Dima?age===28;') == {'Dima': 'User'}
